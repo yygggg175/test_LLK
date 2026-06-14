@@ -234,25 +234,14 @@ def parse_map(game_image, classifier=None) -> list:
     return m_map
 
 
-# 全局 classifier 实例（惰性初始化，进程内复用）
-_classifier = None
+def refresh_game_data(hwnd: Optional[int] = None):
+    """刷新游戏数据：查找窗口 → 截图 → 5 点采样解析地图
 
-
-def get_classifier():
-    """获取/创建全局 BlockClassifier 实例"""
-    global _classifier
-    if _classifier is None:
-        from .feature_extractor import BlockClassifier
-        _classifier = BlockClassifier()
-    return _classifier
-
-
-def refresh_game_data(hwnd: Optional[int] = None, use_ai: bool = True):
-    """刷新游戏数据：查找窗口 → 截图 → AI 解析地图
+    使用原始 C++ 程序的 5 点像素采样方案，
+    精确比对像素，确保方块识别与连连看消除规则一致。
 
     Args:
         hwnd: 已知的窗口句柄 (可选)，为 None 则自动查找
-        use_ai: 是否使用预训练 CNN 识别
 
     Returns:
         (hwnd, m_map, image) 三元组
@@ -268,6 +257,7 @@ def refresh_game_data(hwnd: Optional[int] = None, use_ai: bool = True):
     if image is None:
         raise RuntimeError("截取游戏画面失败！")
 
-    classifier = get_classifier() if use_ai else None
-    m_map = parse_map(image, classifier)
+    # 使用原始 5 点像素采样 (精确可靠)
+    # classifier=None 触发回退方案
+    m_map = parse_map(image, classifier=None)
     return hwnd, m_map, image

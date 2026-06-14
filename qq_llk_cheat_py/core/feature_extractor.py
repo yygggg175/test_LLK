@@ -1,11 +1,15 @@
 """预训练模型 + 两阶段特征提取 + 聚类
 
 核心策略：先按颜色特征硬分组，再在组内用 CNN 区分形状。
-这解决了同一形状不同颜色的方块被误判为同类型的问题。
 
-阶段 1 — 颜色硬分组：计算每块的 RGB 均值签，颜色距离 < 阈值才能同组
-阶段 2 — CNN 形状匹配：在同一颜色组内用 MobileNetV3 特征做聚类
-"""
+⚠️ 已知问题：
+1. CNN 在小图标 (31x35) 上颜色敏感性不足，同形状异色方块
+   可能被分配到相同 class_id，违反连连看消除规则
+2. 此模块保留作为 AI 实验参考，当前生产使用原始 5 点采样方案
+3. 如需启用，可在 screen_capture.py 中将 parse_map 的 classifier=None
+   改为 classifier=get_classifier()
+
+上线前必须解决：颜色准确分离 (可考虑纯颜色比对 + CNN 形状核验)"""
 
 import numpy as np
 from PIL import Image
